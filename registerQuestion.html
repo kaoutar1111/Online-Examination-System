@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Register Question</title>
+  <link rel="stylesheet" href="Css/Style.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: white;
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    textarea, input[type="text"], select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus, input:focus, select:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    .alternatives-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    @media (max-width: 600px) {
+      .alternatives-box {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Register New Question</h2>
+    <form id="questionForm">
+      <label for="testpaper">Statement:</label>
+      <textarea id="testpaper" rows="4" required></textarea>
+
+      <label for="type">Question Type:</label>
+      <select id="type" required>
+        <option value="unique">Single Choice</option>
+        <option value="multiple">Multiple Choice</option>
+        <option value="blank">Fill in the Blanks</option>
+        <option value="Short">Short Answer</option>
+      </select>
+
+      <div id="alternativesContainer" class="alternatives-box" style="display: none;">
+        <input type="text" placeholder="Alternative A" id="altA">
+        <input type="text" placeholder="Alternative B" id="altB">
+        <input type="text" placeholder="Alternative C" id="altC">
+        <input type="text" placeholder="Alternative D" id="altD">
+      </div>
+
+      <label for="response">Correct Answer:</label>
+      <input type="text" id="response" required>
+
+      <label for="category">Category:</label>
+      <input type="text" id="category">
+
+      <label for="level">Level:</label>
+      <select id="level">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Average</option>
+        <option value="hard">Hard</option>
+      </select>
+
+      <button type="submit">Save Question</button>
+    </form>
+  </div>
+
+  <script>
+    const typeSelect = document.getElementById("type");
+    const alternativesContainer = document.getElementById("alternativesContainer");
+
+    typeSelect.addEventListener("change", function () {
+      const value = typeSelect.value;
+      alternativesContainer.style.display = (value === "unique" || value === "multiple") ? "grid" : "none";
+    });
+
+    document.getElementById("questionForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const type = typeSelect.value;
+      let alternatives = null;
+
+      if (type === "unique" || type === "multiple") {
+        const altA = document.getElementById("altA").value.trim();
+        const altB = document.getElementById("altB").value.trim();
+        const altC = document.getElementById("altC").value.trim();
+        const altD = document.getElementById("altD").value.trim();
+
+        if (altA || altB || altC || altD) {
+          alternatives = { A: altA, B: altB, C: altC, D: altD };
+        }
+      }
+
+      const data = {
+        enunciado: document.getElementById("testpaper").value.trim(),
+        type: type,
+        alternatives: alternatives,
+        response: document.getElementById("response").value.trim(),
+        category: document.getElementById("category").value.trim(),
+        level: document.getElementById("level").value
+      };
+
+      fetch('registerQuestion.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(Response => {
+        if (Response.success) {
+          alert("Question registered successfully!");
+          document.getElementById("questionForm").reset();
+          alternativesContainer.style.display = "none";
+        } else {
+          alert("Error: " + Response.error);
+        }
+      })
+      .catch(error => {
+        console.error("Request failed:", error);
+        alert("Failed to save the question.");
+      });
+    });
+  </script>
+</body>
+</html>

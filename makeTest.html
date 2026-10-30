@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      color: white;
+      width: 100%;
+      max-width: 950px;
+      padding: 30px 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.8rem;
+      margin-bottom: 30px;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      padding: 10px 22px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .tab-button.active {
+      background: #ffffff;
+      color: #0072ff;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .input-group {
+      margin: 20px 0;
+    }
+
+    label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      outline: none;
+      font-size: 14px;
+    }
+
+    ::placeholder,
+    select option {
+      color: #e0e0e0;
+    }
+
+    .questions-list {
+      margin-top: 15px;
+    }
+
+    .question {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .question input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.1);
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 26px;
+      background: #ffffff;
+      color: #28a745;
+      border: none;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 1rem;
+    }
+
+    button:hover {
+      background: #e0e0e0;
+    }
+
+    @media (max-width: 768px) {
+      .tabs {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>🧪 Generate Test</h2>
+
+    <div class="tabs">
+      <button class="tab-button active" onclick="switchTab('manualTab')">Manual</button>
+      <button class="tab-button" onclick="switchTab('randomTab')">Random</button>
+    </div>
+
+    <!-- Manual Tab -->
+    <div id="manualTab" class="tab-content active">
+      <p>Select questions manually:</p>
+      <div id="questions" class="questions-list"></div>
+      <button onclick="generateManual()">Generate Manual Test</button>
+    </div>
+
+    <!-- Random Tab -->
+    <div id="randomTab" class="tab-content">
+      <div class="input-group">
+        <label for="randomType">Question Type</label>
+        <select id="randomType">
+          <option value="unique">Single</option>
+          <option value="multiple">Multiple</option>
+          <option value="fillblank">Fill in the blank</option>
+          <option value="short-answer">Short Answer</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="randomQuantity">Quantity</label>
+        <input type="number" id="randomQuantity" value="5" min="1">
+      </div>
+
+      <button onclick="generateRandom()">Generate Random Test</button>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Load questions for manual selection
+    fetch('read.php')
+      .then(res => res.json())
+      .then(list => {
+        const container = document.getElementById('questions');
+        container.innerHTML = '';
+        list.forEach(q => {
+          container.innerHTML += `
+            <div class="question">
+              <label>
+                <input type="checkbox" value="${q.id}">
+                <strong>${q.type.toUpperCase()}</strong> — ${q.testpaper}
+              </label>
+            </div>`;
+        });
+      });
+
+    function generateManual() {
+      const ids = Array.from(document.querySelectorAll('#questions input:checked')).map(i => i.value);
+      fetch('generateTest.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'manual', ids: ids })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) alert('✅ Test generated successfully!');
+        else alert('❌ Error generating manual test.');
+      });
+    }
+
+    function generateRandom() {
+      const type = document.getElementById('randomType').value;
+      const quantity = document.getElementById('randomQuantity').value;
+      fetch('generateTest.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'random', type: type, quantity: quantity })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) alert('✅ Random test generated!');
+        else alert('❌ Error generating random test.');
+      });
+    }
+  </script>
+
+</body>
+</html>

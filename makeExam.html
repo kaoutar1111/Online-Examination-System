@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Schedule Exam - Online Exam System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      max-width: 900px;
+      width: 100%;
+      color: white;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 26px;
+      color: #ffffffee;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="datetime-local"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      outline: none;
+    }
+
+    input::placeholder,
+    select {
+      color: #eee;
+    }
+
+    .full-width {
+      grid-column: span 2;
+    }
+
+    button {
+      padding: 14px;
+      background-color: #ffffff;
+      color: #0072ff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #e0e0e0;
+    }
+
+    @media (max-width: 700px) {
+      form {
+        grid-template-columns: 1fr;
+      }
+      .full-width {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>📅 Schedule a New Exam</h2>
+    <form id="formExam">
+      <div class="full-width">
+        <label for="title">Exam Title</label>
+        <input type="text" id="title" placeholder="Enter title..." required>
+      </div>
+
+      <div>
+        <label for="testId">Select Test</label>
+        <select id="testId"></select>
+      </div>
+
+      <div>
+        <label for="published">Published?</label>
+        <select id="published">
+          <option value="0">No</option>
+          <option value="1">Yes</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="Start">Start Date</label>
+        <input type="datetime-local" id="Start" required>
+      </div>
+
+      <div>
+        <label for="End">End Date</label>
+        <input type="datetime-local" id="End" required>
+      </div>
+
+      <div class="full-width">
+        <button type="submit">💾 Save Exam</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    fetch('listtests.php')
+      .then(res => res.json())
+      .then(list => {
+        const select = document.getElementById('testId');
+        list.forEach(p => {
+          select.innerHTML += `<option value="${p.id}">Test ID ${p.id}</option>`;
+        });
+      });
+
+    document.getElementById('formExam').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const data = {
+        title: document.getElementById('title').value,
+        test_id: document.getElementById('testId').value,
+        start_date: document.getElementById('Start').value,
+        end_date: document.getElementById('End').value,
+        published: document.getElementById('published').value
+      };
+
+      fetch('ExamsAgenda.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) {
+          alert('✅ Exam scheduled successfully!');
+          location.reload();
+        } else {
+          alert('❌ Error: ' + resp.error);
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

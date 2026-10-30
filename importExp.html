@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Import/Export</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      min-height: 100vh;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 1100px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 25px 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      color: #fff;
+    }
+
+    .test {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 12px 15px;
+      margin: 8px 0;
+      border-left: 4px solid #ffeb3b;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: white;
+    }
+
+    input[type="file"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 14px;
+      outline: none;
+    }
+
+    ::placeholder {
+      color: #e0e0e0;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #ffffff;
+      color: #0072ff;
+      border: none;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #e0e0e0;
+    }
+
+    #testContent {
+      display: none;
+      grid-column: span 2;
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      #testContent {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="card">
+      <h2>📋 Tests Generated</h2>
+      <div id="listtests"></div>
+    </div>
+
+    <div class="card">
+      <h2>📤 Export Questions</h2>
+      <form action="exportQuestions.php" method="post">
+        <button type="submit">Download Excel File</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>📥 Import Questions</h2>
+      <form action="importQuestions.php" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Import Excel</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>🎓 Apply Test</h2>
+      <form id="formApply">
+        <input type="number" id="testId" placeholder="Enter test ID" required>
+        <button type="submit">Apply</button>
+      </form>
+    </div>
+
+    <div class="card" id="testContent">
+      <h2>📝 Test Questions</h2>
+      <div id="testQuestions"></div>
+    </div>
+  </div>
+
+  <script>
+    fetch('listTest.php')
+      .then(res => res.json())
+      .then(list => {
+        const container = document.getElementById('listtests');
+        list.forEach(p => {
+          container.innerHTML += `<div class="test">Test ID: ${p.id} | Created: ${p.created_in}</div>`;
+        });
+      });
+
+    document.getElementById('formApply').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const id = document.getElementById('testId').value;
+      fetch('aplicarProva.php?id=' + id)
+        .then(res => res.json())
+        .then(resp => {
+          if (resp.success) {
+            document.getElementById('testContent').style.display = 'block';
+            const div = document.getElementById('testQuestions');
+            div.innerHTML = '';
+            resp.questions.forEach(q => {
+              div.innerHTML += `<div class="test"><strong>${q.type}</strong><br>${q.testpaper}</div>`;
+            });
+          } else {
+            alert("Error: " + resp.error);
+          }
+        });
+    });
+  </script>
+
+</body>
+</html>

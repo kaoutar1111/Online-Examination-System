@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Take Exam | Online Exams System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 900px;
+      color: white;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h2 {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    #timer {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffeb3b;
+    }
+
+    .question {
+      background-color: rgba(255, 255, 255, 0.15);
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 6px solid #00e676;
+      border-radius: 10px;
+    }
+
+    .question strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+    }
+
+    .question label {
+      display: block;
+      margin: 10px 0;
+      font-size: 15px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="radio"],
+    input[type="checkbox"] {
+      margin-right: 10px;
+    }
+
+    button[type="submit"] {
+      display: block;
+      margin: 30px auto 0;
+      background-color: #ffffff;
+      color: #0072ff;
+      border: none;
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #e0e0e0;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      header h2 {
+        font-size: 22px;
+      }
+
+      #timer {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h2>📝 Test in Progress</h2>
+      <p id="timer">Remaining time: <span id="time">--:--</span></p>
+    </header>
+
+    <form id="formTest">
+      <div id="questionsContainer"></div>
+      <button type="submit">Submit Test</button>
+    </form>
+  </div>
+
+  <script>
+    const timeMinutes = 120;
+    let seconds = timeMinutes * 60;
+
+    function startTimer() {
+      const display = document.getElementById('time');
+      const interval = setInterval(() => {
+        const min = Math.floor(seconds / 60);
+        const sec = seconds % 60;
+        display.innerText = `${min}:${sec < 10 ? '0' + sec : sec}`;
+        if (seconds <= 0) {
+          clearInterval(interval);
+          alert("⏰ Time's up! Submitting test...");
+          document.getElementById("formTest").submit();
+        }
+        seconds--;
+      }, 1000);
+    }
+
+    function loadQuestions() {
+      const testId = new URLSearchParams(window.location.search).get("id");
+      fetch("applyTest.php?id=" + testId)
+        .then(res => res.json())
+        .then(resp => {
+          if (!resp.success) return alert("Error: " + resp.error);
+          const div = document.getElementById("questionsContainer");
+          resp.questions.forEach((q, i) => {
+            let html = `<div class="question"><strong>${i + 1}. ${q.testpaper}</strong>`;
+            if (q.type === 'unique' || q.type === 'multiple') {
+              const alternatives = JSON.parse(q.alternatives || '{}');
+              for (let letter in alternatives) {
+                const type = q.type === 'unique' ? 'radio' : 'checkbox';
+                html += `<label><input type="${type}" name="q${q.id}[]" value="${letter}"> ${letter}) ${alternatives[letter]}</label>`;
+              }
+            } else {
+              html += `<input type="text" name="q${q.id}" placeholder="Type your answer here">`;
+            }
+            html += `</div>`;
+            div.innerHTML += html;
+          });
+        });
+    }
+
+    document.getElementById("formTest").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const form = new FormData(this);
+      fetch("saveAnswer.php", {
+        method: "POST",
+        body: form
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) {
+          alert("✅ Test submitted successfully!");
+          window.location.href = "Pag1.html";
+        } else {
+          alert("❌ Error: " + resp.error);
+        }
+      });
+    });
+
+    startTimer();
+    loadQuestions();
+
+    let attemptsSwap = 0;
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        attemptsSwap++;
+        alert("⚠️ You switched tabs or minimized the window. This will be logged!");
+        fetch("registerAttempts.php", {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: "Tab Swap", Attempts: attemptsSwap })
+        });
+      }
+    });
+
+    const testId = new URLSearchParams(window.location.search).get("id");
+    fetch('automaticGrading.php?test_id=' + testId)
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) {
+          alert("Your mark is: " + resp.mark);
+        }
+      });
+  </script>
+</body>
+</html>

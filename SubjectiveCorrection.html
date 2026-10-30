@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Manual Grading</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #f0f0f0;
+      padding: 30px 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .container {
+      max-width: 850px;
+      width: 100%;
+      background: rgba(255 255 255 / 0.12);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      padding: 30px 40px;
+    }
+    h2 {
+      text-align: center;
+      font-weight: 600;
+      margin-bottom: 30px;
+      font-size: 28px;
+      color: #fff;
+    }
+    .card {
+      background: rgba(255 255 255 / 0.15);
+      backdrop-filter: blur(6px);
+      border-radius: 14px;
+      padding: 25px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      color: #eee;
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+    }
+    .card strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .card p {
+      margin-bottom: 6px;
+      font-style: italic;
+      color: #ccc;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      resize: vertical;
+      background: rgba(255 255 255 / 0.25);
+      color: #fff;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      cursor: not-allowed;
+    }
+    input[type=number] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      margin-top: 8px;
+      margin-bottom: 14px;
+    }
+    button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+      display: inline-block;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #388e3c;
+    }
+    .no-items {
+      text-align: center;
+      font-style: italic;
+      color: #ddd;
+      padding: 40px 0;
+      font-size: 1.2rem;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+      button {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>📝 Manual Correction</h2>
+  <div id="content"></div>
+</div>
+
+<script>
+  fetch("listSubjetiveNotCorrected.php")
+    .then(res => res.json())
+    .then(list => {
+      const div = document.getElementById("content");
+
+      if (list.length === 0) {
+        div.innerHTML = "<p class='no-items'>No subjective response pending.</p>";
+        return;
+      }
+
+      let html = "";
+      list.forEach((item, i) => {
+        html += `
+          <div class="card">
+            <strong>${i + 1}. ${item.testpaper}</strong>
+            <p>Student's answer:</p>
+            <textarea disabled>${item.given_answer}</textarea>
+            <p>Mark (0 to 10):</p>
+            <input type="number" min="0" max="10" step="0.5" id="mark${item.id}" />
+            <button onclick="correct(${item.id}, ${item.student_id}, ${item.question_id})">Save correction</button>
+          </div>
+        `;
+      });
+
+      div.innerHTML = html;
+    });
+
+  function correct(response_id, student_id, question_id) {
+    const markInput = document.getElementById("mark" + response_id);
+    const mark = markInput.value;
+
+    if (mark === "" || isNaN(mark) || mark < 0 || mark > 10) {
+      alert("Please enter a valid grade between 0 and 10.");
+      return;
+    }
+
+    fetch("saveManualCorrection.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ response_id, student_id, question_id, mark })
+    })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) {
+          alert("Correction saved!");
+          location.reload();
+        } else {
+          alert("Error: " + resp.error);
+        }
+      });
+  }
+</script>
+
+</body>
+</html>

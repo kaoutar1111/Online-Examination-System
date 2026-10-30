@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Performance Statistics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      max-width: 900px;
+      width: 100%;
+      color: white;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 26px;
+      color: #ffffffee;
+      margin-bottom: 30px;
+    }
+
+    canvas {
+      margin-top: 30px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    form {
+      display: flex;
+      justify-content: center;
+      margin-top: 25px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background-color: #ffffff;
+      color: #0072ff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #e0e0e0;
+    }
+
+    @media (max-width: 700px) {
+      canvas {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📊 Grade Statistics by Test</h2>
+    <canvas id="graficMarks" height="100"></canvas>
+
+    <form action="exportResults.php" method="post">
+      <button type="submit">📥 Export Results (Excel)</button>
+    </form>
+  </div>
+
+  <script>
+    fetch("statisticsMarks.php")
+      .then(res => res.json())
+      .then(data => {
+        const tests = data.map(item => item.title);
+        const medias = data.map(item => parseFloat(item.media));
+
+        new Chart(document.getElementById('graficMarks'), {
+          type: 'bar',
+          data: {
+            labels: tests,
+            datasets: [{
+              label: 'Average of Marks',
+              data: medias,
+              backgroundColor: '#ffffff',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            plugins: {
+              legend: {
+                labels: {
+                  color: '#ffffff'
+                }
+              },
+              title: {
+                display: true,
+                text: 'Average Grades per Test',
+                color: '#ffffff',
+                font: {
+                  size: 18
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 10,
+                ticks: {
+                  color: '#ffffff'
+                }
+              },
+              x: {
+                ticks: {
+                  color: '#ffffff'
+                }
+              }
+            }
+          }
+        });
+      });
+  </script>
+</body>
+</html>

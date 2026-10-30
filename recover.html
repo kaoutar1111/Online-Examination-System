@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recover Password - Exam System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #ffffffee;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      text-align: center;
+    }
+
+    .recovery-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      color: white;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      font-size: 22px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #eee;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #ffffff;
+      color: #0072ff;
+      border: none;
+      font-weight: 600;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #e0e0e0;
+    }
+
+    @media (max-width: 480px) {
+      .recovery-container {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Online Exam System by Kaoutar</h1>
+
+  <div class="recovery-container">
+    <h2>🔐 Recover Your Password</h2>
+    <form id="recoverForm">
+      <input type="email" id="emailRecover" placeholder="Your email" required />
+      <input type="text" id="name" placeholder="Your Name" required />
+      <button type="submit">Verify</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('recoverForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('emailRecover').value.trim();
+      const name = document.getElementById('name').value.trim();
+
+      if (!email || !name) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      fetch('recoverPassword.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, name: name })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.valid) {
+          alert("✅ Verification successful. Redirecting...");
+          window.location.href = "reset.html?email=" + encodeURIComponent(email);
+        } else {
+          alert("❌ Incorrect email or name.");
+        }
+      })
+      .catch(() => {
+        alert("❌ Error verifying credentials.");
+      });
+    });
+  </script>
+</body>
+</html>

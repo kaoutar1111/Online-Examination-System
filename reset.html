@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password - Exam System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+      color: #fff;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      font-weight: 400;
+      font-size: 20px;
+      color: #e0e0e0;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #ffffff;
+      color: #4a00e0;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #ddd;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        margin: 0 20px;
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Reset Password</h1>
+    <h2>Set a new password to continue</h2>
+    <form id="resetForm">
+      <input type="password" id="newPassword" placeholder="New password" required>
+      <input type="password" id="confirmPassword" placeholder="Confirm password" required>
+      <button type="submit">Reset Password</button>
+    </form>
+  </div>
+
+  <script>
+    function getemailFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('email');
+    }
+
+    document.getElementById('resetForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const email = getemailFromURL();
+
+      if (!email) {
+        alert("email not found. Please return to the previous step.");
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        alert("Passwords do not match. Please try again.");
+        return;
+      }
+
+      fetch('resetPassword.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, newPassword: newPassword })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) {
+          alert("Password successfully updated!");
+          window.location.href = "Pag1.html";
+        } else {
+          alert("Error: " + resp.error);
+        }
+      })
+      .catch(() => alert("Network error. Please try again later."));
+    });
+  </script>
+</body>
+</html>
